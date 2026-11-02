@@ -118,12 +118,21 @@ async def send_welcome_to_channels(guild: discord.Guild, member: discord.Member 
     
     avatar_bytes = await member.display_avatar.read()
 
+    # Récupérer la bannière Discord du membre si elle existe
+    banner_bytes = None
+    try:
+        user_full = await bot.fetch_user(member.id)
+        if user_full.banner:
+            banner_bytes = await user_full.banner.read()
+    except Exception:
+        banner_bytes = None
+
     for ch_id in config.WELCOME_CHANNEL_IDS:
         channel = guild.get_channel(ch_id)
         if not channel:
             continue
         try:
-            card_buffer = generate_welcome_card(avatar_bytes, member.display_name, guild.name)
+            card_buffer = generate_welcome_card(avatar_bytes, banner_bytes, member.display_name, guild.name)
             file = discord.File(fp=card_buffer, filename="welcome.png")
 
             embed = discord.Embed(
