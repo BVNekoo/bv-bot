@@ -1,28 +1,22 @@
 import io
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
-def generate_welcome_card(avatar_bytes: bytes, member_name: str = "", guild_name: str = "") -> io.BytesIO:
-    """Génère uniquement la photo de profil circulaire avec le contour couleur Discord #5865F2, sans aucun texte."""
-    # Rendu haute définition (800x800) avec fond transparent
-    w2, h2 = 800, 800
+def generate_welcome_card(avatar_bytes: bytes, member_name: str = "", guild_name: str = "BVNekoo") -> io.BytesIO:
+    """Génère la carte de bienvenue horizontale au format exact de DraftBot (Screen 2)."""
+    # Supersampling 2x (1400x480 réduit à 700x240) pour une netteté absolue
+    w2, h2 = 1400, 480
     img = Image.new("RGBA", (w2, h2), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    avatar_size2 = 720
-    avatar_x2 = (w2 - avatar_size2) // 2
+    # Fond rectangulaire arrondi style Discord (#2b2d31)
+    card_color = (43, 45, 49)
+    draw.rounded_rectangle((0, 0, w2, h2), radius=36, fill=card_color)
+
+    # Avatar circulaire à gauche
+    avatar_size2 = 270
+    avatar_x2 = 90
     avatar_y2 = (h2 - avatar_size2) // 2
 
-    # Cercle #5865f2 (RGB: 88, 101, 242)
-    ring_pad = 14
-    ring_bbox = (
-        avatar_x2 - ring_pad,
-        avatar_y2 - ring_pad,
-        avatar_x2 + avatar_size2 + ring_pad,
-        avatar_y2 + avatar_size2 + ring_pad
-    )
-    draw.ellipse(ring_bbox, outline=(88, 101, 242), width=18)
-
-    # Découpe circulaire de l'avatar
     try:
         avatar = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA")
     except Exception:
@@ -37,8 +31,30 @@ def generate_welcome_card(avatar_bytes: bytes, member_name: str = "", guild_name
     circular_avatar.paste(avatar, (0, 0), mask=mask)
     img.paste(circular_avatar, (avatar_x2, avatar_y2), mask=circular_avatar)
 
-    # Réduction à 400x400 avec anti-aliasing Lanczos
-    final_img = img.resize((400, 400), Image.Resampling.LANCZOS)
+    # Textes à droite
+    try:
+        font_title = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 96)
+        font_sub = ImageFont.truetype("C:/Windows/Fonts/segoeui.ttf", 44)
+        font_guild = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 86)
+    except Exception:
+        try:
+            font_title = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 96)
+            font_sub = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 44)
+            font_guild = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 86)
+        except Exception:
+            font_title = font_sub = font_guild = ImageFont.load_default()
+
+    text_x = 410
+    # Bienvenue
+    draw.text((text_x, 75), "Bienvenue", fill=(255, 255, 255), font=font_title)
+    # sur le serveur Discord
+    draw.text((text_x, 200), "sur le serveur Discord", fill=(219, 222, 225), font=font_sub)
+    # Nom du serveur (ex: BVNekoo)
+    display_guild = guild_name if guild_name and guild_name != "BV" else "BVNekoo"
+    draw.text((text_x, 265), display_guild, fill=(255, 255, 255), font=font_guild)
+
+    # Réduction à 700x240 avec Lanczos
+    final_img = img.resize((700, 240), Image.Resampling.LANCZOS)
 
     output = io.BytesIO()
     final_img.save(output, format="PNG")
