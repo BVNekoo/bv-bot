@@ -54,9 +54,9 @@ def generate_welcome_card(avatar_bytes: bytes, banner_bytes: bytes | None = None
     circular_avatar.paste(avatar, (0, 0), mask=mask)
     bg.paste(circular_avatar, (avatar_x, avatar_y), mask=circular_avatar)
 
-    # Contour blanc épuré autour de l'avatar
+    # Contour couleur Discord #5865F2 autour de l'avatar
     draw = ImageDraw.Draw(bg)
-    draw.ellipse((avatar_x, avatar_y, avatar_x + avatar_size, avatar_y + avatar_size), outline=(255, 255, 255, 230), width=3)
+    draw.ellipse((avatar_x, avatar_y, avatar_x + avatar_size, avatar_y + avatar_size), outline=(88, 101, 242), width=4)
 
     # 3. Découpe avec coins arrondis
     card_mask = Image.new("L", (w, h), 0)

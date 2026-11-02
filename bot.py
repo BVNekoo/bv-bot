@@ -138,7 +138,7 @@ async def send_welcome_to_channels(guild: discord.Guild, member: discord.Member 
             embed = discord.Embed(
                 title="Bienvenue sur le discord !",
                 description=member.mention,
-                color=0xE05A47
+                color=0x5865F2
             )
             embed.set_image(url="attachment://welcome.png")
             await channel.send(embed=embed, file=file)
