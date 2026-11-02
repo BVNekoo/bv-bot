@@ -9,6 +9,11 @@ import database
 
 app = FastAPI(title="Discord Follower Verifier")
 
+# Route de santé pour Render
+@app.get("/")
+async def root():
+    return {"status": "ok", "message": "BV Follower Bot is running!"}
+
 # Stocke la référence au bot Discord pour pouvoir attribuer les rôles en direct
 discord_bot = None
 

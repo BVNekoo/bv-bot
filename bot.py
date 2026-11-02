@@ -207,26 +207,35 @@ async def cmd_setup_panel(ctx):
     await ctx.channel.send(embed=embed, view=VerifyButtonView())
     await ctx.message.delete()
 
-async def main():
+async def run_bot():
     if not config.DISCORD_TOKEN:
-        print("❌ ERREUR : Aucun DISCORD_TOKEN n'est défini dans le fichier .env !")
-        print("Ajoute ton token dans le fichier .env puis relance le bot.")
+        print("❌ ERREUR CRITIQUE : La variable DISCORD_TOKEN est vide ou absente dans Render (Environment Variables) !", flush=True)
+        print("👉 Va sur Render > Ton service > Environment > Ajoute DISCORD_TOKEN avec ton token Discord.", flush=True)
         return
+    try:
+        print("🤖 Connexion du bot à Discord...", flush=True)
+        await bot.start(config.DISCORD_TOKEN)
+    except Exception as e:
+        print(f"❌ Erreur connexion Discord : {e}", flush=True)
 
-    # Configuration du serveur web uvicorn
+async def main():
+    port = int(os.getenv("PORT", config.PORT or 8000))
+    print(f"🌐 Démarrage du serveur web sur le port {port}...", flush=True)
+
+    # Configuration du serveur web uvicorn (liaison immédiate au port pour Render)
     uvicorn_config = uvicorn.Config(
         app=fastapi_app,
         host="0.0.0.0",
-        port=config.PORT,
-        log_level="warning"
+        port=port,
+        log_level="info"
     )
     server = uvicorn.Server(uvicorn_config)
 
-    # Lancement simultané du bot Discord et du serveur Web
-    await asyncio.gather(
-        bot.start(config.DISCORD_TOKEN),
-        server.serve()
-    )
+    # Lancement du bot Discord en tâche de fond (ne bloque pas le serveur web)
+    asyncio.create_task(run_bot())
+
+    # Le serveur web répond immédiatement au port scan de Render
+    await server.serve()
 
 if __name__ == "__main__":
     try:
